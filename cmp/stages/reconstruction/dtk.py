@@ -12,6 +12,7 @@ from glob import glob
 import subprocess
 from cmp.util import mymove
 import gzip
+import nibabel as nb
 
 def resample_dsi():
 
@@ -326,7 +327,54 @@ def compute_odfs():
 
         # mymove( src, dst, log )
 
+
+    # calculate ADC maps
+    log.info("Compute ADC")
+    log.info("===========")
+
+    DSI_path = op.join(gconf.get_cmp_rawdiff(), '2x2x2')
+    files = glob(op.join(DSI_path, 'MR*.nii.gz')) # list of DSI volumes, resolution 2x2x2
+    files = sorted(files)
+    N = len(files) # number of acquired volumes
+
+    b0img = nb.load(op.join(DSI_path,'MR0000.nii.gz'))
+    hdr = b0img.get_header()
+    affine = b0img.get_affine()
+
+    b0 = b0img.get_data()
+    DSIq5 = np.ndarray(shape=(b0.shape[0],b0.shape[1],b0.shape[2],N), dtype=float)
+    count = 0
+    for thisfile in files:
+        print "load file", thisfile
+        img = nb.load(op.join(DSI_path,thisfile))
+        DSIq5[:,:,:,count] = img.get_data()
+        count = count + 1
+
+    log.info(DSIq5.shape)
+
+    grad_514_path = gconf.get_cmp_gradient_table("grad_514") # Van Wedeen matrix
+    q_points = np.genfromtxt(grad_514_path)
+    q_points = q_points[:,1:] # from Van Wedeen matrix, select the coordinates columns only (last three columns)
+    q_points = q_points[0:N,:] # from Van Wedeen matrix, select the first N lines only
+    q_points = q_points * 5 # coordinates of the sampling points in q-space
+
+    # do pre-processing: compute values for 1D axis in q space and interpolate DSI data for the different shells
+    q_axis, data, mid_pos = dsi_preprocess(DSIq5, q_points, callb = pri )
+    # compute ADC values
+    ADC6, ADC8 = dsi_adc(q_axis, data)
+
+    # save maps
+    # ADC8
+    img = nb.Nifti1Image(ADC8, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC8.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC8.nii'), mdict={'matrix': ADC8})
+     # ADC6
+    img = nb.Nifti1Image(ADC6, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC6.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC6.nii'), mdict={'matrix': ADC6})
+
     log.info("[ DONE ]")
+
 
 def convert_to_dir_dsi():
 
@@ -344,6 +392,7 @@ def convert_to_dir_dsi():
         log.error("Unable to create dsi_dir.nii")
     
     log.info("[ DONE ]")
+
     
 def convert_to_dir_dti():
 
@@ -412,7 +461,8 @@ def run(conf):
     if not len(gconf.emailnotify) == 0:
         msg = ["Diffusion module", int(time()-start)]
         send_email_notification(msg, gconf, log)
-          
+
+        
 def declare_inputs(conf):
     """Declare the inputs to the stage to the PipelineStatus object"""
     
