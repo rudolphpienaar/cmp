@@ -13,6 +13,7 @@ import subprocess
 from cmp.util import mymove
 import gzip
 import nibabel as nb
+import numpy as np
 
 def resample_dsi():
 
