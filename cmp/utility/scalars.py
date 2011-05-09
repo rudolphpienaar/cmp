@@ -41,21 +41,21 @@ def dsi_preprocess(dsiarr, gradientmat, callb = None):
     unique_norms = np.unique(all_norms) # determine the 'constant module shells' in the q-space
     q_axis = np.concatenate((-np.flipud(unique_norms),unique_norms[1:]),1) # generate the q axis for the S signal to be fitted (defined for each voxel)
 
-    print "Number of sampling points in the new q axis: " + str(q_axis.shape[0])
+    callb("Number of sampling points in the new q axis: " + str(q_axis.shape[0]))
 
     # For each voxel, compute the signal S values, averaged on each 'constant module shell'
     # initialization of the ndarray which will contain S for each voxel
     data = np.ndarray(shape = (I,J,K,q_axis.shape[0]))
     mid_pos = math.floor(q_axis.shape[0]/2.0)
     pc = -1
-    print "Averaging raw data for q-shells..."
+    callb("Averaging raw data for q-shells...")
     # compute the signal values for all the points of the q-axis
     for i in range(unique_norms.shape[0]):
         # Percent counter
         pcN = int(round( float(100*i)/unique_norms.shape[0] ))
         if pcN > pc and pcN%1 == 0:
             pc = pcN
-            print str(pc) + " %"
+            callb(str(pc) + " %")
 
         this_norm = unique_norms[i]
 
@@ -73,7 +73,7 @@ def dsi_preprocess(dsiarr, gradientmat, callb = None):
         data[:,:,:,mid_pos+i] = np.mean(this_data, axis=3)
         data[:,:,:,mid_pos-i] = data[:,:,:,mid_pos+i]
 
-    print "[ OK ]"
+    callb("[ OK ]")
     return q_axis, data, mid_pos
 
 
@@ -91,11 +91,11 @@ def dsi_adc(q_axis, data, mid_pos):
     # initialization of the output maps
     I, J, K, N = data.shape
 
-    ADC4 = np.zeros((I,J,K))
+    ADC6 = np.zeros((I,J,K))
     #Ku4 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
     #P04 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
 
-    ADC8 = np.zeros(((I,J,K)))
+    ADC8 = np.zeros((I,J,K))
     #Ku8 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
     #P08 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
 
@@ -128,14 +128,14 @@ def dsi_adc(q_axis, data, mid_pos):
     #            temp = np.polyval(coeff, q_axis)
     #            P08[i,j,k] = np.sum(temp)
 
-                coeff = sp.polyfit(q_axis,S,4)
-                ADC4[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+                coeff = sp.polyfit(q_axis,S,6)
+                ADC6[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
     #            Ku4[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
     #            temp = np.polyval(coeff, q_axis)
     #            P04[i,j,k] = np.sum(temp)
 
     print "[ OK ]"
-    return ADC4, ADC8
+    return ADC6, ADC8
     
 
 def dsi_adc_slowfast(q_axis, data, mid_pos):
