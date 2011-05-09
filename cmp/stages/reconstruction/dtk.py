@@ -353,7 +353,7 @@ def compute_odfs():
 
     log.info(DSIq5.shape)
 
-    grad_514_path = gconf.get_cmp_gradient_table("grad_514") # Van Wedeen matrix
+    grad_514_path = gconf.get_cmp_gradient_table("dsi_grad_514") # Van Wedeen matrix
     q_points = np.genfromtxt(grad_514_path)
     q_points = q_points[:,1:] # from Van Wedeen matrix, select the coordinates columns only (last three columns)
     q_points = q_points[0:N,:] # from Van Wedeen matrix, select the first N lines only
