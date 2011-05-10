@@ -14,6 +14,9 @@ from cmp.util import mymove
 import gzip
 import nibabel as nb
 import numpy as np
+import scipy as sp
+import cmp.utility.scalars as scalars
+
 
 def resample_dsi():
 
@@ -354,25 +357,27 @@ def compute_odfs():
     log.info(DSIq5.shape)
 
     grad_514_path = gconf.get_cmp_gradient_table("dsi_grad_514") # Van Wedeen matrix
-    q_points = np.genfromtxt(grad_514_path)
-    q_points = q_points[:,1:] # from Van Wedeen matrix, select the coordinates columns only (last three columns)
-    q_points = q_points[0:N,:] # from Van Wedeen matrix, select the first N lines only
-    q_points = q_points * 5 # coordinates of the sampling points in q-space
+    grad_mat = np.genfromtxt(grad_514_path)
+
 
     # do pre-processing: compute values for 1D axis in q space and interpolate DSI data for the different shells
-    q_axis, data, mid_pos = dsi_preprocess(DSIq5, q_points, callb = pri )
+    q_axis, data, mid_pos = scalars.dsi_preprocess(DSIq5, grad_mat, callb = scalars.pri)
     # compute ADC values
-    ADC6, ADC8 = dsi_adc(q_axis, data)
+    ADC6, ADC8, ADC12 = scalars.dsi_adc(q_axis, data, mid_pos)
 
     # save maps
     # ADC8
     img = nb.Nifti1Image(ADC8, affine, hdr)
     img.to_filename(op.join(odf_out_path, 'dsi_ADC8.nii'))
-    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC8.nii'), mdict={'matrix': ADC8})
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC8.mat'), mdict={'matrix': ADC8})
      # ADC6
     img = nb.Nifti1Image(ADC6, affine, hdr)
     img.to_filename(op.join(odf_out_path, 'dsi_ADC6.nii'))
-    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC6.nii'), mdict={'matrix': ADC6})
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC6.mat'), mdict={'matrix': ADC6})
+    # ADC12
+    img = nb.Nifti1Image(ADC6, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC12.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC12.mat'), mdict={'matrix': ADC12})
 
     log.info("[ DONE ]")
 
