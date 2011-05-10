@@ -5,6 +5,9 @@ import scipy as sp
 import nibabel as nb
 import math
 
+def pri(stri):
+    print stri
+
 def dsi_preprocess(dsiarr, gradientmat, callb = None):
     """ Compute an ADC-like measure for DSI data
 
@@ -13,9 +16,9 @@ def dsi_preprocess(dsiarr, gradientmat, callb = None):
     dsiarr : (I,J,K,M)
         The DSI volumes for each q value. M is the number of volumes including
         mean b0 as the first volume.
-    gradientmat : (X,Y,Z,M)
+    gradientmat : (M,4)
         Gradient table for the M acquired DSI volumes including the
-        b0 encoding direction.
+        b0 encoding direction. The last three columns correspond to the encoding directions.
     callback : function
         A function to be called with a string parameter
         E.g. for logging purposes
@@ -35,6 +38,9 @@ def dsi_preprocess(dsiarr, gradientmat, callb = None):
     assert(dsiarr.shape[-1] == gradientmat.shape[0])
     I, J, K, N = dsiarr.shape
     # Build q axis for fitting
+    q_points = gradientmat[:,1:] # from Van Wedeen matrix, select the coordinates columns only (last three columns)
+    q_points = q_points[0:N,:] # from Van Wedeen matrix, select the first N lines only
+    q_points = q_points * 5 # coordinates of the sampling points in q-space
     all_norms = np.empty([N,1]) # compute the norms of the vectors in the q-space
     for i in range(q_points.shape[0]):
         all_norms[i] = np.sqrt(np.dot(q_points[i,:],q_points[i,:]))
@@ -99,16 +105,16 @@ def dsi_adc(q_axis, data, mid_pos):
     #Ku8 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
     #P08 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
 
+    ADC12 = np.zeros((I,J,K))
+
     pc = -1
     count = 0
     n = I * J * K
     print "Polynomial fitting for each voxel signal over q-axis..."
     # loop throughout all the voxels of the volume
-    for i in range(b0.shape[0]):
-
-        for j in range(b0.shape[1]):
-
-            for k in range(b0.shape[2]):
+    for i in range(I):
+        for j in range(J):
+            for k in range(K):
 
                 # Percent counter
                 count = count + 1
@@ -134,8 +140,11 @@ def dsi_adc(q_axis, data, mid_pos):
     #            temp = np.polyval(coeff, q_axis)
     #            P04[i,j,k] = np.sum(temp)
 
+                coeff = sp.polyfit(q_axis,S,12)
+                ADC12[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+
     print "[ OK ]"
-    return ADC6, ADC8
+    return ADC6, ADC8, ADC12
     
 
 def dsi_adc_slowfast(q_axis, data, mid_pos):
