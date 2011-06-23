@@ -4,6 +4,8 @@ import numpy as np
 import scipy as sp
 import nibabel as nb
 import math
+#from scipy.optimize import curve_fit
+
 
 def pri(stri):
     print stri
@@ -98,14 +100,15 @@ def dsi_adc(q_axis, data, mid_pos):
     I, J, K, N = data.shape
 
     ADC6 = np.zeros((I,J,K))
-    #Ku4 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+    Ku6 = np.zeros((I,J,K))
     #P04 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
 
     ADC8 = np.zeros((I,J,K))
-    #Ku8 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+    Ku8 = np.zeros((I,J,K))
     #P08 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
 
     ADC12 = np.zeros((I,J,K))
+    Ku12 = np.zeros((I,J,K))
 
     pc = -1
     count = 0
@@ -130,24 +133,27 @@ def dsi_adc(q_axis, data, mid_pos):
 
                 coeff = sp.polyfit(q_axis,S,8)
                 ADC8[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
-    #            Ku8[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
+                Ku8[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
     #            temp = np.polyval(coeff, q_axis)
     #            P08[i,j,k] = np.sum(temp)
 
                 coeff = sp.polyfit(q_axis,S,6)
                 ADC6[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
-    #            Ku4[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
+                Ku6[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
     #            temp = np.polyval(coeff, q_axis)
     #            P04[i,j,k] = np.sum(temp)
 
                 coeff = sp.polyfit(q_axis,S,12)
                 ADC12[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+                Ku12[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
+                print "coeff[-5] = " 
+                print coeff[-5]
 
     print "[ OK ]"
-    return ADC6, ADC8, ADC12
+    return ADC6, ADC8, ADC12, Ku6, Ku8, Ku12
     
 
-def dsi_adc_slowfast(q_axis, data, mid_pos):
+def dsi_adc_slowfast_filters(q_axis, data, mid_pos):
     """ Compute an ADC-like fast slow measures
 
     Parameters
@@ -216,6 +222,64 @@ def dsi_adc_slowfast(q_axis, data, mid_pos):
     print "[ OK ]"
 
     return ADC4slow, ADC4fast, ADC8slow, ADC8fast
+
+
+def dsi_adc_slowfast_biexp(q_axis, data, mid_pos):
+    """ Compute an ADC-like fast slow measures
+
+    Parameters
+    ----------
+    q_axis : TODO
+
+    dta : TODO
+
+    Returns
+    -------
+    ADC4slow, ADC4fast, ADC8slow, ADC8fast : (I,J,K) volumes
+        Returns TODO
+
+    """
+
+    I, J, K, N = data.shape
+    tupe = (I,J,K)
+    
+    # Compute fast component (low b-values, extracellular) and slow component (high b-values, intracellular)
+    ADCbiexp_fast = np.zeros(tupe)
+    ADCbiexp_slow = np.zeros(tupe)
+    n = I * J * K
+
+
+    pc = -1
+    count = 0
+    print "Slow and fast curves polynomial fitting for each voxel signal over q-axis..."
+    for i in range(b0.shape[0]): # loop throughout all the voxels of the volume
+        for j in range(b0.shape[1]):
+            for k in range(b0.shape[2]):
+
+                # Percent counter
+                count = count + 1
+                pcN = int(round( float(100*count)/n ))
+                if pcN > pc and pcN%1 == 0:
+                    pc = pcN
+                    print str(pc) + " %"
+
+                S = data[i,j,k,:] # for the current voxel, extract the signal to be fitted
+                Snorm = S / S[mid_pos] # normalization respect to the b0
+
+				#b_axis = q_axis * q_axis
+
+				#popt, pcov = curve_fit(biexp_func, b_axis, Snorm)
+
+				# TODO
+
+    print "[ OK ]"
+
+    return ADC4slow, ADC4fast, ADC8slow, ADC8fast
+
+
+def biexp_func(b_axis, f, b1, b2):
+	return f * np.exp(-b1 * b_axis) + (1-f) * np.exp(-b2 * b_axis)
+
 
 
 if __name__ == '__main__':
