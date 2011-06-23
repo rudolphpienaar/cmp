@@ -242,7 +242,7 @@ def compute_odfs():
                              op.join(odf_out_path, "dsi_"),
                              gconf.get_dtk_dsi_matrix(),
                              param )
-    runCmd (odf_cmd, log )
+    #runCmd (odf_cmd, log )
     
     if not op.exists(op.join(odf_out_path, "dsi_odf.nii")):
         log.error("Unable to reconstruct ODF!")
@@ -250,7 +250,7 @@ def compute_odfs():
     # calculate GFA map
     cmd = op.join(gconf.get_cmp_binary_path(), 'DTB_gfa')
     dta_cmd = '%s --dsi "%s" --m 2' % (cmd, op.join(odf_out_path, 'dsi_'))
-    runCmd( dta_cmd, log )
+    #runCmd( dta_cmd, log )
 
     if not op.exists(op.join(odf_out_path, "dsi_gfa.nii")):
         log.error("Unable to calculate GFA map!")
@@ -268,10 +268,11 @@ def compute_odfs():
         
         # mymove( src, dst, log )
 
+
     # calculate skewness map
     cmd = op.join(gconf.get_cmp_binary_path(), 'DTB_gfa')
     dta_cmd = '%s --dsi "%s" --m 3' % (cmd, op.join(odf_out_path, 'dsi_'))
-    runCmd( dta_cmd, log )
+    #runCmd( dta_cmd, log )
 
     if not op.exists(op.join(odf_out_path, "dsi_skewness.nii")):
         log.error("Unable to calculate skewness map!")
@@ -291,7 +292,7 @@ def compute_odfs():
     # calculate dsi_kurtosis map
     cmd = op.join(gconf.get_cmp_binary_path(), 'DTB_gfa')
     dta_cmd = '%s --dsi "%s" --m 4' % (cmd, op.join(odf_out_path, 'dsi_'))
-    runCmd( dta_cmd, log )
+    #runCmd( dta_cmd, log )
 
     if not op.exists(op.join(odf_out_path, "dsi_kurtosis.nii")):
         log.error("Unable to calculate kurtosis map!")
@@ -313,7 +314,7 @@ def compute_odfs():
     # calculate P0 map
     cmd = op.join(gconf.get_cmp_binary_path(), 'DTB_P0')
     dta_cmd = '%s --dsi "%s" --dwi "%s"' % (cmd, op.join(odf_out_path, 'dsi_'), op.join(gconf.get_nifti(), 'DSI.nii.gz'))
-    runCmd( dta_cmd, log )
+    #runCmd( dta_cmd, log )
 
     if not op.exists(op.join(odf_out_path, "dsi_P0.nii")):
         log.error("Unable to calculate P0 map!")
@@ -363,7 +364,7 @@ def compute_odfs():
     # do pre-processing: compute values for 1D axis in q space and interpolate DSI data for the different shells
     q_axis, data, mid_pos = scalars.dsi_preprocess(DSIq5, grad_mat, callb = scalars.pri)
     # compute ADC values
-    ADC6, ADC8, ADC12 = scalars.dsi_adc(q_axis, data, mid_pos)
+    ADC6, ADC8, ADC12, Ku6, Ku8, Ku12 = scalars.dsi_adc(q_axis, data, mid_pos)
 
     # save maps
     # ADC8
@@ -375,9 +376,21 @@ def compute_odfs():
     img.to_filename(op.join(odf_out_path, 'dsi_ADC6.nii'))
     sp.io.savemat(op.join(odf_out_path, 'dsi_ADC6.mat'), mdict={'matrix': ADC6})
     # ADC12
-    img = nb.Nifti1Image(ADC6, affine, hdr)
+    img = nb.Nifti1Image(ADC12, affine, hdr)
     img.to_filename(op.join(odf_out_path, 'dsi_ADC12.nii'))
     sp.io.savemat(op.join(odf_out_path, 'dsi_ADC12.mat'), mdict={'matrix': ADC12})
+    # Ku6
+    img = nb.Nifti1Image(Ku6, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_Ku6.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_Ku6.mat'), mdict={'matrix': Ku6})
+    # Ku8
+    img = nb.Nifti1Image(Ku8, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_Ku8.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_Ku8.mat'), mdict={'matrix': Ku8})
+    # Ku12
+    img = nb.Nifti1Image(Ku12, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_Ku12.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_Ku12.mat'), mdict={'matrix': Ku12})
 
     log.info("[ DONE ]")
 
@@ -450,9 +463,9 @@ def run(conf):
     start = time()
         
     if gconf.diffusion_imaging_model == 'DSI':
-        resample_dsi()
+        #resample_dsi()
         compute_odfs()
-        convert_to_dir_dsi()
+        #convert_to_dir_dsi()
     elif gconf.diffusion_imaging_model == 'DTI':
         resample_dti()
         compute_dts()
