@@ -10,6 +10,9 @@ import math
 def pri(stri):
     print stri
 
+def pri(stri):
+    print stri
+
 def dsi_preprocess(dsiarr, gradientmat, callb = None):
     """ Compute an ADC-like measure for DSI data
 
@@ -99,6 +102,7 @@ def dsi_adc(q_axis, data, mid_pos):
     # initialization of the output maps
     I, J, K, N = data.shape
 
+<<<<<<< HEAD
 	#ADC8 = np.zeros((I,J,K))
     #Ku8 = np.zeros((I,J,K))
     #P08 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
@@ -107,6 +111,17 @@ def dsi_adc(q_axis, data, mid_pos):
     #Ku12 = np.zeros((I,J,K))
     ADC12_no_norm = np.zeros((I,J,K))
     b0_polyfit = np.zeros((I,J,K))
+=======
+    ADC6 = np.zeros((I,J,K))
+    #Ku4 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+    #P04 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+
+    ADC8 = np.zeros((I,J,K))
+    #Ku8 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+    #P08 = np.zeros((b0.shape[0],b0.shape[1],b0.shape[2]))
+
+    ADC12 = np.zeros((I,J,K))
+>>>>>>> 6465e03a9da573355cfb765c01086d110afb3261
 
     pc = -1
     count = 0
@@ -129,6 +144,7 @@ def dsi_adc(q_axis, data, mid_pos):
                 # normalization respect to the b0
                 S = S / S[mid_pos]
 
+<<<<<<< HEAD
                 #coeff = sp.polyfit(q_axis,S,8)
                 #ADC8[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
                 #Ku8[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
@@ -144,9 +160,29 @@ def dsi_adc(q_axis, data, mid_pos):
                 coeff = sp.polyfit(q_axis,S,12)
                 ADC12_no_norm[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
                 b0_polyfit[i,j,k] = np.polyval(coeff,0)
+=======
+                coeff = sp.polyfit(q_axis,S,8)
+                ADC8[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+    #            Ku8[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
+    #            temp = np.polyval(coeff, q_axis)
+    #            P08[i,j,k] = np.sum(temp)
+
+                coeff = sp.polyfit(q_axis,S,6)
+                ADC6[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+    #            Ku4[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
+    #            temp = np.polyval(coeff, q_axis)
+    #            P04[i,j,k] = np.sum(temp)
+>>>>>>> 6465e03a9da573355cfb765c01086d110afb3261
+
+                coeff = sp.polyfit(q_axis,S,12)
+                ADC12[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
 
     print "[ OK ]"
+<<<<<<< HEAD
     return ADC12, ADC12_no_norm, b0_polyfit
+=======
+    return ADC6, ADC8, ADC12
+>>>>>>> 6465e03a9da573355cfb765c01086d110afb3261
     
 
 def dsi_adc_slowfast_filters(q_axis, data, mid_pos):

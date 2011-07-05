@@ -364,6 +364,7 @@ def compute_odfs():
     # do pre-processing: compute values for 1D axis in q space and interpolate DSI data for the different shells
     q_axis, data, mid_pos = scalars.dsi_preprocess(DSIq5, grad_mat, callb = scalars.pri)
     # compute ADC values
+<<<<<<< HEAD
     ADC12, ADC12_no_norm, b0_polyfit = scalars.dsi_adc(q_axis, data, mid_pos)
 
     # save maps
@@ -379,6 +380,23 @@ def compute_odfs():
     img = nb.Nifti1Image(b0_polyfit, affine, hdr)
     img.to_filename(op.join(odf_out_path, 'dsi_b0_polyfit.nii'))
     sp.io.savemat(op.join(odf_out_path, 'dsi_b0_polyfit.mat'), mdict={'matrix': b0_polyfit})
+=======
+    ADC6, ADC8, ADC12 = scalars.dsi_adc(q_axis, data, mid_pos)
+
+    # save maps
+    # ADC8
+    img = nb.Nifti1Image(ADC8, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC8.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC8.mat'), mdict={'matrix': ADC8})
+     # ADC6
+    img = nb.Nifti1Image(ADC6, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC6.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC6.mat'), mdict={'matrix': ADC6})
+    # ADC12
+    img = nb.Nifti1Image(ADC6, affine, hdr)
+    img.to_filename(op.join(odf_out_path, 'dsi_ADC12.nii'))
+    sp.io.savemat(op.join(odf_out_path, 'dsi_ADC12.mat'), mdict={'matrix': ADC12})
+>>>>>>> 6465e03a9da573355cfb765c01086d110afb3261
 
     log.info("[ DONE ]")
 
