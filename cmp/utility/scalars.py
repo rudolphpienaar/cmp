@@ -105,8 +105,8 @@ def dsi_adc(q_axis, data, mid_pos):
 
     ADC12 = np.zeros((I,J,K))
     #Ku12 = np.zeros((I,J,K))
-	ADC12_no_norm = np.zeros((I,J,K))
-	b0_polyfit = np.zeros((I,J,K))
+    ADC12_no_norm = np.zeros((I,J,K))
+    b0_polyfit = np.zeros((I,J,K))
 
     pc = -1
     count = 0
@@ -140,10 +140,10 @@ def dsi_adc(q_axis, data, mid_pos):
                 #Ku12[i,j,k] = (6 * coeff[-5] / (coeff[-3] * coeff[-3])) - 3
                 #print "coeff[-5] = " 
                 #print coeff[-5]
-				S = data[i,j,k,:]
-				coeff = sp.polyfit(q_axis,S,12)
-				ADC12_no_norm[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
-				b0_polyfit[i,j,k] = np.polyval(coeff,0)
+                S = data[i,j,k,:]
+                coeff = sp.polyfit(q_axis,S,12)
+                ADC12_no_norm[i,j,k] = (-coeff[-3] / (2 * math.pi * math.pi))
+                b0_polyfit[i,j,k] = np.polyval(coeff,0)
 
     print "[ OK ]"
     return ADC12, ADC12_no_norm, b0_polyfit
